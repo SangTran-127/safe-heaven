@@ -16,5 +16,15 @@ RUN usermod -l ${NEW_USER} vscode \
 # Switch to the newly renamed non-root user
 USER ${NEW_USER}
 
+# Install Oh My Zsh, Powerlevel10k theme, and plugins (autosuggestions & syntax-highlighting)
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
+    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/${NEW_USER}/.oh-my-zsh/custom/themes/powerlevel10k \
+    && git clone https://github.com/zsh-users/zsh-autosuggestions /home/${NEW_USER}/.oh-my-zsh/custom/plugins/zsh-autosuggestions \
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /home/${NEW_USER}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+
+# Configure .zshrc theme and plugins
+RUN sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="powerlevel10k\/powerlevel10k"/' /home/${NEW_USER}/.zshrc \
+    && sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' /home/${NEW_USER}/.zshrc
+
 # Configure Git to trust all directories to avoid dubious ownership errors on volume mounts
 RUN git config --global --add safe.directory "*"
