@@ -1,10 +1,26 @@
 # Guide to Running Dev Containers on VS Code via Remote-SSH (Optimized for Weak VPS)
 
-This guide provides detailed instructions on how to set up and optimize a **Go 1.26** development environment using **VS Code** connected to a **Remote VPS** via **Remote-SSH**. The environment is configured to be minimal, keeping RAM and CPU usage on your VPS as low as possible.
+This guide provides detailed instructions on how to set up, optimize, and host a **Go 1.26** development environment using **VS Code** connected to a **Remote VPS** via **Remote-SSH**. The environment is configured to be minimal, keeping RAM and CPU usage on your VPS as low as possible.
 
 ---
 
-## 1. Prerequisites
+## 1. Recommended Hardware Specifications
+
+To run this Remote-SSH + Dev Container setup smoothly, here are the recommended specifications for both your local machine (Client) and the Remote VPS:
+
+### Local Client (Your macOS/PC):
+*   **Recommended:** Any modern Mac (M1/M2/M3 or Intel) or Windows/Linux PC with **8 GB RAM** or more. 
+    *   *Note:* The local machine only handles rendering the VS Code UI, making it extremely lightweight.
+
+### Remote VPS:
+*   **Minimum (Works using our optimized GHCR setup):** 1 vCPU, **1 GB RAM**, 15 GB SSD.
+    *   *Why this works:* By offloading the Docker build process to GitHub Actions and disabling heavy VS Code features (git autofetch, telemetry), the running VS Code Server and container consume less than **400 MB** of RAM combined.
+*   **Recommended (For comfortable development & DB hosting):** 1 or 2 vCPUs, **2 GB RAM**, 25 GB SSD.
+    *   *Benefit:* Allows you to run database containers (like PostgreSQL or Redis) alongside your Go application without running out of memory.
+
+---
+
+## 2. Prerequisites
 
 ### On your Local Machine (Host macOS):
 1.  Install **VS Code**.
@@ -24,7 +40,7 @@ This guide provides detailed instructions on how to set up and optimize a **Go 1
 
 ---
 
-## 2. Step-by-Step Setup Guide
+## 3. Step-by-Step Setup Guide
 
 Since the VPS has limited resources, the best method is to connect VS Code to the VPS via SSH first, then run the Dev Container locally on the VPS.
 
@@ -46,7 +62,7 @@ Since the VPS has limited resources, the best method is to connect VS Code to th
 
 ---
 
-## 3. GitHub Actions CI/CD Pipeline
+## 4. GitHub Actions CI/CD Pipeline
 
 To protect your weak VPS, we have set up a GitHub Actions workflow to build the Docker image natively on GitHub's servers and host it on GitHub Container Registry (GHCR) at `ghcr.io/sangtran-127/safe-heaven:latest`.
 
@@ -77,7 +93,40 @@ If you want to edit your `Dockerfile` and test the build *locally* without pushi
 
 ---
 
-## 4. Resource Optimization Tips for Weak VPS
+## 5. How to Host / Run Your Application from the VPS
+
+When developing a web app (e.g., listening on port `8080`), you have two ways to run/host it depending on whether you are in **Development** or **Production** mode.
+
+### Option A: Development Mode (Local Testing via SSH Tunnel - Safest)
+*   **How it works:** When you start your Go application inside the Dev Container (`go run main.go`), VS Code automatically forwards the port (`8080`) to your local Mac.
+*   **To access it:** Open your web browser on your local Mac and navigate to `http://localhost:8080`.
+*   **Security Advantage:** You **do not need to open any ports** on your VPS firewall. Everything remains securely tunneled over SSH.
+
+### Option B: Hosting Mode (Public Access via VPS IP)
+If you want to host the application publicly so that other users can access it using your VPS IP (`http://<YOUR_VPS_IP>:8080`), follow these steps:
+
+1.  **Expose the Port on the VPS Firewall:**
+    Open the port (e.g. `8080`) on your VPS host system using `ufw`:
+    ```bash
+    sudo ufw allow 8080/tcp
+    ```
+    *(If using a cloud provider like AWS, DigitalOcean, or Vultr, also allow port 8080 in their cloud firewall dashboard).*
+2.  **Bind to all interfaces (`0.0.0.0`):**
+    Ensure your Go web server binds to `0.0.0.0:8080` (all network interfaces) and NOT `127.0.0.1:8080` (which would restrict it to inside the container).
+3.  **Run the application:**
+    *   **Inside Dev Container:** If you run `go run main.go` inside the Dev Container, since Docker exposes the ports matching the devcontainer configuration, you can access it on `http://<YOUR_VPS_IP>:8080`.
+    *   **Production Build (Recommended):**
+        To run it long-term in the background without keeping VS Code open:
+        1. Compile your app into a Linux binary inside the container:
+           ```bash
+           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app main.go
+           ```
+        2. Move the binary `app` out of the container to your VPS host directory (e.g. `/root/test-devcontainer/app`).
+        3. Run it in the background on your VPS using `systemd` or as a background Docker container.
+
+---
+
+## 6. Resource Optimization Tips for Weak VPS
 
 To keep your VPS running as efficiently as possible, apply the following settings in your VS Code `settings.json` (User/Remote Settings):
 
