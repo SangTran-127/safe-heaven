@@ -8,7 +8,7 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.defaultProfile.linux": "zsh",
         // Prevent automatic git fetching to avoid triggering malicious git hooks automatically
         "git.autofetch": false,
         // Ask for confirmation before running tasks automatically in the workspace
@@ -29,6 +29,10 @@
       ]
     }
   },
+  "mounts": [
+    "source=/root/.local/bin/agy,target=/usr/local/bin/agy,type=bind,consistency=cached",
+    "source=/root/.gemini,target=/home/sang/.gemini,type=bind,consistency=cached"
+  ],
   // Automatically run this command to clean up and sync Go dependencies when the container starts
   "postCreateCommand": "go mod tidy",
   // 8080, 8000 and 9000 are common ports used for Go REST APIs / gRPC backends
