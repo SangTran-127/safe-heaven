@@ -1,0 +1,40 @@
+{
+  "name": "Go Secure Learning Env",
+  // Reference the pre-built image from GitHub Container Registry (GHCR) to avoid building on a weak VPS
+  "image": "ghcr.io/sangtran-127/safe-heaven:latest",
+  "remoteUser": "sang",
+  "containerUser": "sang",
+  "updateRemoteUserUID": true,
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        // Prevent automatic git fetching to avoid triggering malicious git hooks automatically
+        "git.autofetch": false,
+        // Ask for confirmation before running tasks automatically in the workspace
+        "task.allowAutomaticTasks": "ask",
+        // --- GOLANG CONFIGURATION FOR CONTAINER ---
+        "go.useLanguageServer": true,
+        "go.toolsManagement.checkForUpdates": "local",
+        "gopls": {
+          "ui.completion.usePlaceholders": true,
+          "ui.diagnostic.staticcheck": true // Enable staticcheck linter for code analysis and optimization
+        },
+        "go.lintTool": "golangci-lint",
+        "go.formatTool": "goimports" // Automatically format code and optimize imports
+      },
+      "extensions": [
+        "golang.go", // Official Go extension by the Go Team
+        "tamasfe.even-better-toml" // TOML configuration file support
+      ]
+    }
+  },
+  // Automatically run this command to clean up and sync Go dependencies when the container starts
+  "postCreateCommand": "go mod tidy",
+  // 8080, 8000 and 9000 are common ports used for Go REST APIs / gRPC backends
+  "forwardPorts": [
+    8000,
+    8080,
+    9000
+  ]
+}
