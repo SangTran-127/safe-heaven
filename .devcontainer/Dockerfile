@@ -16,9 +16,8 @@ RUN usermod -l ${NEW_USER} vscode \
 # Switch to the newly renamed non-root user
 USER ${NEW_USER}
 
-# Install Oh My Zsh, Powerlevel10k theme, and plugins (autosuggestions & syntax-highlighting)
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
-    && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/${NEW_USER}/.oh-my-zsh/custom/themes/powerlevel10k \
+# Install Powerlevel10k theme and plugins (autosuggestions & syntax-highlighting)
+RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /home/${NEW_USER}/.oh-my-zsh/custom/themes/powerlevel10k \
     && git clone https://github.com/zsh-users/zsh-autosuggestions /home/${NEW_USER}/.oh-my-zsh/custom/plugins/zsh-autosuggestions \
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /home/${NEW_USER}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
